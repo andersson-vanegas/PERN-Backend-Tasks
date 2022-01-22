@@ -1,12 +1,8 @@
 const { Router } = require('express');
-const pool = require('../database')
+const {getAllTasks} = require ('../controllers/task.controller')
 const router = Router(); // nos permite crear nuevas urls
 
-router.get('/tasks', async (req, res)=>{
-    const result = await pool.query('SELECT NOW()')
-    console.log(result)
-    res.json('ejecutado')
-})
+router.get('/tasks', getAllTasks)
 
 router.get('/tasks/10', (req, res)=>{
     res.send('Retornando una sola tarea') // al ser visitada mandara el mensaje al front
