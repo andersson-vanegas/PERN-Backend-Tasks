@@ -18,7 +18,8 @@ node_modules
 package-lock.json
 *.log
 *.gz
-
+# enviroment variables
+.env
 
 # Coveralls
 coverage
