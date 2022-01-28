@@ -1,85 +1,132 @@
-import { Card, CardContent, Grid, TextField, Typography, Button, CircularProgress } from '@mui/material'
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 
-export default function TaskForm() {
-
+const TaskForm = () => {
   const [task, setTask] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
   });
-  const [loading, setloading] = useState(false);
-  const navigate = useNavigate()
-  const handleSubmit = async (e) => {
-    e.preventDefault(); /* Cancelar recargo formulario */
-    setloading(true)
-    const res = await fetch('http://localhost:4000/tasks', {
-      method: 'POST',
-      body: JSON.stringify(task),/*vuelve string a un objecto*/
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json()
-    setloading(false)
-    navigate('/')
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  const navigate = useNavigate();
+  const params = useParams();
+
+  useEffect(() => {
+    if (params.id) {
+      loadTask(params.id);
+    }
+  }, [params.id]);
+
+  const loadTask = async (id) => {
+    const res = await fetch("http://localhost:4000/tasks/" + id);
+    const data = await res.json();
+    setTask({ title: data.title, description: data.description });
+    setEditing(true);
   };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      if (editing) {
+        const response = await fetch(
+          "http://localhost:4000/tasks/" + params.id,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task),
+          }
+        );
+        await response.json();
+      } else {
+        const response = await fetch("http://localhost:4000/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(task),
+        });
+        await response.json();
+      }
+
+      setLoading(false);
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleChange = (e) =>
     setTask({ ...task, [e.target.name]: e.target.value });
-
-
 
   return (
     <Grid
       container
-      direction="column"
       alignItems="center"
+      direction="column"
       justifyContent="center"
     >
       <Grid item xs={3}>
-        <Card sx={{ mt: 5 }}
+        <Card
+          sx={{ mt: 5 }}
           style={{
-            backgroundColor: '#1e272e',
-            padding: '1rem',
-          }}>
-          <Typography variant='5' textAlign="center" color="white">
-            Create task
+            backgroundColor: "#1E272E",
+            padding: "1rem",
+          }}
+        >
+          <Typography variant="h5" textAlign="center" color="white">
+            {editing ? "Update Task" : "Create Task"}
           </Typography>
           <CardContent>
             <form onSubmit={handleSubmit}>
               <TextField
                 variant="filled"
-                label="write Your Title"
+                label="Write your Title"
                 sx={{
-                  display: 'block',
-                  margin: '.5rem 0',
+                  display: "block",
+                  margin: ".5rem 0",
                 }}
                 name="title"
                 onChange={handleChange}
+                value={task.title}
                 inputProps={{ style: { color: "white" } }}
                 InputLabelProps={{ style: { color: "white" } }}
               />
-
               <TextField
-                variant="filled"
-                label="Write Your description"
+                variant="outlined"
+                label="Write your Description"
                 multiline
                 rows={4}
                 sx={{
-                  display: 'block',
-                  margin: '.5rem 0',
+                  display: "block",
+                  margin: ".5rem 0",
                 }}
                 name="description"
                 onChange={handleChange}
+                value={task.description}
                 inputProps={{ style: { color: "white" } }}
                 InputLabelProps={{ style: { color: "white" } }}
               />
 
-              <Button variant="contained" color="primary" type="submit" 
-              disabled={!task.title|| !task.description}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={!task.title || !task.description}
+              >
                 {loading ? (
-                  <CircularProgress color="inherit" size={24} /> /* conexion lenta*/
-                ) : ( 
-                  "create"
+                  <CircularProgress color="inherit" size={25} />
+                ) : (
+                  "Save"
                 )}
               </Button>
             </form>
@@ -87,5 +134,7 @@ export default function TaskForm() {
         </Card>
       </Grid>
     </Grid>
-  )
-}
+  );
+};
+
+export default TaskForm;
